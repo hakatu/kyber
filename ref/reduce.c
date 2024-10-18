@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "params.h"
 #include "reduce.h"
 
@@ -18,7 +19,9 @@ int16_t montgomery_reduce(int32_t a)
   int16_t t;
 
   t = (int16_t)a*QINV;
+  // printf("t1= %d | 0x%x; ",t,t);
   t = (a - (int32_t)t*KYBER_Q) >> 16;
+  // printf("t2= %d | 0x%x\n",t,t);
   return t;
 }
 
@@ -35,8 +38,10 @@ int16_t montgomery_reduce(int32_t a)
 int16_t barrett_reduce(int16_t a) {
   int16_t t;
   const int16_t v = ((1<<26) + KYBER_Q/2)/KYBER_Q;
-
+  // printf("v= %d | 0x%x; ",v,v);
   t  = ((int32_t)v*a + (1<<25)) >> 26;
+  // printf("t1= %d | 0x%x; ",t,t);
   t *= KYBER_Q;
+  // printf("t2= %d | 0x%x\n",t,t);
   return a - t;
 }

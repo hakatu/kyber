@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "params.h"
 #include "ntt.h"
 #include "reduce.h"
@@ -35,7 +36,7 @@ void init_ntt() {
   }
 }
 */
-
+uint16_t cal_cnt=0u;
 const int16_t zetas[128] = {
   -1044,  -758,  -359, -1517,  1493,  1422,   287,   202,
    -171,   622,  1577,   182,   962, -1202, -1474,  1468,
@@ -78,20 +79,72 @@ static int16_t fqmul(int16_t a, int16_t b) {
 * Arguments:   - int16_t r[256]: pointer to input/output vector of elements of Zq
 **************************************************/
 void ntt(int16_t r[256]) {
+  // printf("NTT\n");
+  // printf("r_in[256]: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("%d", r[cnt]);
+  //   else 
+  //     printf("%d, ", r[cnt]);
+  // }
+  // printf("}\n");
+  printf("r_in_ntt_%d = [",cal_cnt);
+  for (uint16_t cnt =0; cnt<256; cnt++)
+  {
+    if (cnt==255)
+      printf("0x%hx", r[cnt]);
+    else 
+      printf("0x%hx, ", r[cnt]);
+  }
+  printf("]\n");
   unsigned int len, start, j, k;
   int16_t t, zeta;
-
   k = 1;
+  // uint8_t stage=0;
+  // printf("========Print NTT Stage========\n");
+  // uint16_t cnt_ntt=0;
+  //printf("stage,len,k,j,j+len,zetas[k],r[j]_in,r[j+len]_in,zetas[k]_hex,r[j]_in_hex,r[j+len]_in_hex,r[j]_out,r[j+len]_out,r[j]_out_hex,r[j+len]_out_hex\n");
   for(len = 128; len >= 2; len >>= 1) {
+    // stage++;
     for(start = 0; start < 256; start = j + len) {
       zeta = zetas[k++];
       for(j = start; j < start + len; j++) {
         t = fqmul(zeta, r[j + len]);
+        // if (j%2==0)
+        // {
+          // printf("mem_ROMWRAP[%d] = {8'd%d,8'd%d,16'd%d};\n",cnt_ntt,j/2,(j+len)/2,zeta);
+          // cnt_ntt++;
+        // }
+        //get j, len, k
+        //get r[j], r[j+len], zeta
+        // printf("mem_ROMWRAP[%d] = {8'd%d,8'd%d,16'd%d};\n",cnt_ntt++,j,j+len,zeta);
+        //printf ("%d, %d, %d, %d, %d, %d, %d, %d, 0x%hx, 0x%hx, 0x%hx, ",stage,len,k-1,j,j+len,zeta,r[j],r[j+len],zeta,r[j],r[j+len]);
         r[j + len] = r[j] - t;
         r[j] = r[j] + t;
+        //get r[j], r[j+len]
+        //printf ("%d, %d, 0x%hx, 0x%hx\n", r[j], r[j+len], r[j], r[j+len]);
       }
     }
   }
+  // printf("r_out[256]: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("%d", r[cnt]);
+  //   else 
+  //     printf("%d, ", r[cnt]);
+  // }
+  // printf("}\n");
+  printf("r_out_ntt_%d = [",cal_cnt++);
+  for (uint16_t cnt =0; cnt<256; cnt++)
+  {
+    if (cnt==255)
+      printf("0x%hx", r[cnt]);
+    else 
+      printf("0x%hx, ", r[cnt]);
+  }
+  printf("]\n");
 }
 
 /*************************************************
@@ -106,23 +159,105 @@ void ntt(int16_t r[256]) {
 void invntt(int16_t r[256]) {
   unsigned int start, len, j, k;
   int16_t t, zeta;
-  const int16_t f = 1441; // mont^2/128
-
+  const int16_t f = 1441; /* mont^2/128 */
+// print r
+  // printf("INVNTT\n");
+  // printf("r_in[256]: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("%d", r[cnt]);
+  //   else 
+  //     printf("%d, ", r[cnt]);
+  // }
+  // printf("}\n");
+  printf("r_in_intt_%d = [",cal_cnt);
+  for (uint16_t cnt =0; cnt<256; cnt++)
+  {
+    if (cnt==255)
+      printf("0x%hx", r[cnt]);
+    else 
+      printf("0x%hx, ", r[cnt]);
+  }
+  printf("]\n");
   k = 127;
+  // uint8_t stage=0;
+  // uint16_t cnt_intt=0;
+  // printf("========Print INTT Stage========\n");
+  //printf("stage,len,k,j,j+len,zetas[k],r[j]_in,r[j+len]_in,zetas[k]_hex,r[j]_in_hex,r[j+len]_in_hex,r[j]_out,r[j+len]_out,r[j]_out_hex,r[j+len]_out_hex\n");
+  // printf("u,v,mont((v-u)w)_sw,mont(vw),mont(uw),mont(vw)-mont(uw),barrett(mont(vw)-mont(uw)),vw-uw,mont(vw-uw)\n");
   for(len = 2; len <= 128; len <<= 1) {
+    // stage++;
     for(start = 0; start < 256; start = j + len) {
       zeta = zetas[k--];
       for(j = start; j < start + len; j++) {
+        // if (j%2==0)
+        // {
+          // printf("mem_ROMWRAP[%d] = {8'd%d,8'd%d,16'd%d};\n",cnt_intt,j/2,(j+len)/2,zeta);
+          // cnt_intt++;
+        // }
         t = r[j];
+        //get j, len, k
+        //get r[j], r[j+len], zeta
+        // printf("mem_ROMWRAP[%d] = {8'd%d,8'd%d,16'd%d};\n",cnt_intt++,j,j+len,zeta);
+        //printf ("%d, %d, %d, %d, %d, %d, %d, %d, 0x%hx, 0x%hx, 0x%hx, ",stage,len,k+1,j,j+len,zeta,r[j],r[j+len],zeta,r[j],r[j+len]);
+        // printf("%d,%d,",r[j],r[j+len]);
         r[j] = barrett_reduce(t + r[j + len]);
-        r[j + len] = r[j + len] - t;
+        // int16_t mont_vw=fqmul(zeta, r[j + len]);
+        // int16_t mont_uw=fqmul(zeta, t);
+        // int16_t mont_vw_sub_mont_uw= mont_vw - mont_uw;
+        // int16_t mont_vw_sub_mont_uw_red= barrett_reduce(mont_vw_sub_mont_uw);
+        // int32_t vw_sub_uw=zeta*r[j+len]-zeta*t;
+        // int16_t vw_sub_uw_reduce=montgomery_reduce(vw_sub_uw);
+        r[j + len] = r[j + len] - t;    
         r[j + len] = fqmul(zeta, r[j + len]);
+        // printf("%d,%d,%d,%d,%d,%d,%d\n",r[j+len],mont_vw,mont_uw,mont_vw_sub_mont_uw,mont_vw_sub_mont_uw_red,vw_sub_uw,vw_sub_uw_reduce);
+        //get r[j], r[j+len]
+        //printf ("%d, %d, 0x%hx, 0x%hx\n", r[j], r[j+len], r[j], r[j+len]);
       }
     }
   }
-
+//print r
+  // printf("r_out_before_fqmul[256]: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("%d", r[cnt]);
+  //   else 
+  //     printf("%d, ", r[cnt]);
+  // }
+  // printf("}\n");
+  printf("r_out_intt_%d = [",cal_cnt++);
+  for (uint16_t cnt =0; cnt<256; cnt++)
+  {
+    if (cnt==255)
+      printf("0x%hx", r[cnt]);
+    else 
+      printf("0x%hx, ", r[cnt]);
+  }
+  printf("]\n");
   for(j = 0; j < 256; j++)
     r[j] = fqmul(r[j], f);
+//print r
+//print r
+  // printf("r_out_after_fqmul[256]: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("%d", r[cnt]);
+  //   else 
+  //     printf("%d, ", r[cnt]);
+  // }
+  // printf("}\n");
+  // printf("r_out_after_fqmul[256]_hex: {");
+  // for (uint16_t cnt =0; cnt<256; cnt++)
+  // {
+  //   if (cnt==255)
+  //     printf("0x%hx", r[cnt]);
+  //   else 
+  //     printf("0x%hx, ", r[cnt]);
+  // }
+  // printf("}\n");
 }
 
 /*************************************************
@@ -138,9 +273,15 @@ void invntt(int16_t r[256]) {
 **************************************************/
 void basemul(int16_t r[2], const int16_t a[2], const int16_t b[2], int16_t zeta)
 {
+  // printf("a[0] = 0x%x, a[1]=0x%x, b[0] = 0x%x, b[1]=0x%x, zeta=0x%x\n", a[0], a[1], b[0], b[1], zeta);
   r[0]  = fqmul(a[1], b[1]);
+  // printf("r[0]=0x%x, ", r[0]);
   r[0]  = fqmul(r[0], zeta);
+  // printf("r[0]=0x%x, ", r[0]);
   r[0] += fqmul(a[0], b[0]);
+  // printf("r[0]=0x%x, ", r[0]);
   r[1]  = fqmul(a[0], b[1]);
+  // printf("r[1]=0x%x, ", r[1]);
   r[1] += fqmul(a[1], b[0]);
+  // printf("r[1]=0x%x\n", r[1]);
 }

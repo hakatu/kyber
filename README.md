@@ -1,4 +1,12 @@
-# Kyber
+# Kyber - Hardware Testcase for NIST PQC
+
+The *ref* folder contains the reference implementation of the Kyber key encapsulation mechanism but for Kyber 512 only, which would output test vectors for the hardware implementation 's testbenches.
+
+## Credits
+
+Thanks Toan Huu Nguyen, Pham Hoang Anh.
+
+# Original README.md
 
 [![Build Status](https://travis-ci.org/pq-crystals/kyber.svg?branch=master)](https://travis-ci.org/pq-crystals/kyber) 
 [![Coverage Status](https://coveralls.io/repos/github/pq-crystals/kyber/badge.svg?branch=master)](https://coveralls.io/github/pq-crystals/kyber?branch=master)
